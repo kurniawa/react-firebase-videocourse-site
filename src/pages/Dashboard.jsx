@@ -4,11 +4,7 @@ import MainLayout from "../layouts/MainLayout";
 import { useEffect, useState } from "react";
 import ValidationFeedbackWithSpinner from "../components/molecules/ValidationFeedbackWithSpinner";
 
-interface DashboardProps {
-    type: string;
-}
-
-function Dashboard({ type }: DashboardProps) {
+function Dashboard() {
     const navigate = useNavigate();
     const [loginUser] = useState(() => {
         return JSON.parse(localStorage.getItem("login_user") || "null");

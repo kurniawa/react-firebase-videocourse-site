@@ -1,6 +1,6 @@
 import { forwardRef, useState } from "react";
 
-const InputPassword = (({ id, name, required }, ref) => {
+const InputPassword = forwardRef(({ id, name, required }, ref) => {
         const [showPassword, setShowPassword] = useState(false);
 
         return (

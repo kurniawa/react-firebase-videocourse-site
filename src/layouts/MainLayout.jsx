@@ -1,11 +1,7 @@
-import { ReactNode, useState } from "react";
+import { useState } from "react";
 import Navbar from "../components/organisms/Navbar";
 
-interface MainLayoutProps {
-  children: ReactNode;
-}
-
-export default function MainLayout({ children }: MainLayoutProps) {
+export default function MainLayout({ children }) {
     const [loginUser] = useState(() => {
         return JSON.parse(localStorage.getItem("login_user") || "null");
     });

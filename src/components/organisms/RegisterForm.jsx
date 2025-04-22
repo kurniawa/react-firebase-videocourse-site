@@ -10,7 +10,6 @@ import LineHorizontalWithLabel from "../atoms/LineHorizontalWithLabel.jsx";
 import { useRef, useState } from "react";
 import LoadingSpinner from "../molecules/LoadingSpinner.jsx";
 import ValidationFeedback from "../atoms/ValidationFeedback.jsx";
-import axios from "axios";
 
 // Import Firebase Auth dan Firestore
 import { createUserWithEmailAndPassword } from "firebase/auth";
@@ -18,18 +17,19 @@ import { collection, doc, getDocs, query, setDoc, where } from "firebase/firesto
 import { auth, db } from "../../config/firebaseConfig.js";
 
 export default function RegisterForm() {
+
+    // console.log(auth, db);
     
-    const fullNameRef = useRef<HTMLInputElement>(null);
-    const emailRef = useRef<HTMLInputElement>(null);
-    const genderRef = useRef<HTMLSelectElement>(null);
-    const countryCodeRef = useRef<HTMLSelectElement>(null);
-    const phoneNumberRef = useRef<HTMLInputElement>(null);
-    const passwordRef = useRef<HTMLInputElement>(null);
-    const passwordConfirmationRef = useRef<HTMLInputElement>(null);
+    const fullNameRef = useRef(null);
+    const emailRef = useRef(null);
+    const genderRef = useRef(null);
+    const phoneNumberRef = useRef({});
+    const passwordRef = useRef(null);
+    const passwordConfirmationRef = useRef(null);
 
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState<string | null>(null);
+    const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(null);
 
     const navigate = useNavigate();
 
@@ -41,8 +41,8 @@ export default function RegisterForm() {
         // console.log("Full Name:", fullNameRef.current?.value);
         // console.log("Email:", emailRef.current?.value);
         // console.log("Gender:", genderRef.current?.value);
-        // console.log("Country Code:", countryCodeRef.current?.value);
-        // console.log("Phone Number:", phoneNumberRef.current?.value);
+        // console.log("Country Code:", phoneNumberRef.current?.countryCode.value);
+        // console.log("Phone Number:", phoneNumberRef.current?.phoneNumber.value);
         // console.log("Password:", passwordRef.current?.value);
         // console.log("Password Confirmation:", passwordConfirmationRef.current?.value);
 
@@ -50,8 +50,8 @@ export default function RegisterForm() {
         const fullName = fullNameRef.current?.value?.trim() || "";
         const email = emailRef.current?.value?.trim() || "";
         const gender = genderRef.current?.value?.trim() || "";
-        const countryCode = countryCodeRef.current?.value?.trim() || "";
-        const phoneNumber = phoneNumberRef.current?.value?.trim() || "";
+        const countryCode = phoneNumberRef.current?.countryCode.value?.trim() || "";
+        const phoneNumber = phoneNumberRef.current?.phoneNumber.value?.trim() || "";
         const password = passwordRef.current?.value; // Jangan trim password
         const passwordConfirmation = passwordConfirmationRef.current?.value; // Jangan trim password
         let phoneNumberFull = "";
@@ -60,6 +60,7 @@ export default function RegisterForm() {
         // return;
         // Validation
         if (!fullName || !email || !gender || !countryCode || !phoneNumber || !password || !passwordConfirmation) {
+            console.log(fullName, email, gender, countryCode, phoneNumber, password, passwordConfirmation);
             setError("Semua kolom wajib diisi!");
             setLoading(false);
             return;
@@ -150,8 +151,6 @@ export default function RegisterForm() {
 
     };
 
-
-
     return (
         <form onSubmit={handleRegister} className="relative rounded-sm bg-white p-[20px] xl:w-[590px] border border-[#F1F1F1]">
             {loading && <LoadingSpinner />}
@@ -166,7 +165,7 @@ export default function RegisterForm() {
                 <InputWithLabel type="text" id="nama-lengkap" name="Nama Lengkap" required={true} ref={fullNameRef} />
                 <InputWithLabel type="email" id="e-mail" name="E-Mail" required={true} ref={emailRef} />
                 <SelectWithLabel type="select" id="jenis-kelamin" name="Jenis Kelamin" options={[{value:"Female", label:"Wanita"}, {value:"Male", label:"Pria"}]} required={true} ref={genderRef} />
-                <InputPhoneNumber label="No. HP" required={true} countryCodeRef={countryCodeRef} phoneNumberRef={phoneNumberRef} />
+                <InputPhoneNumber label="No. HP" required={true} ref={phoneNumberRef} />
                 <InputPassword id="kata-sandi" name="Kata Sandi" required={true} ref={passwordRef} />
                 <InputPassword id="konfirmasi-kata-sandi" name="Konfirmasi Kata Sandi" required={true} ref={passwordConfirmationRef} />
 

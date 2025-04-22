@@ -1,6 +1,7 @@
 import { forwardRef } from "react";
 
-const InputWithLabel = (({ type, id, name, required }, ref) => {
+const InputWithLabel = forwardRef(
+    ({ type, id, name, required }, ref) => {
         return (
             <div>
                 <label htmlFor={id}>
@@ -11,6 +12,7 @@ const InputWithLabel = (({ type, id, name, required }, ref) => {
             </div>
         );
     }
+    
 );
 
 export default InputWithLabel;

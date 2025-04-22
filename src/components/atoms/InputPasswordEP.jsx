@@ -1,6 +1,6 @@
 import { forwardRef, useState } from "react";
 
-const InputPasswordEP = (({ label }, ref) => {
+const InputPasswordEP = forwardRef(({ label }, ref) => {
         const [showPassword, setShowPassword] = useState(false);
 
         return (

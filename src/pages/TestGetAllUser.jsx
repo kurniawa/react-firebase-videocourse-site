@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
-import axios, { AxiosError, AxiosResponse } from "axios";
+import axios from "axios";
 
 export default function TestGetAllUser() {
-    const [users, setUsers] = useState<{ id: number; fullName: string; email: string }[]>([]);
+    const [users, setUsers] = useState([]);
     
     useEffect(() => {
         axios.get("https://videobelajar-react-lsbnmnxbb-adi-kurniawans-projects.vercel.app/api/users")
-            .then((response: AxiosResponse) => {
+            .then((response) => {
                 console.log("Response:", response.data);
                 setUsers(response.data);
             })
-            .catch((err: AxiosError) => {
+            .catch((err) => {
                 console.error("Error fetching users:", err);
             });
     }, []);

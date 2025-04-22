@@ -5,7 +5,6 @@ import Footer from "./components/organisms/Footer"
 import Newsletter from "./components/organisms/Newsletter"
 import MainLayout from "./layouts/MainLayout"
 
-
 function App() {
   const sectionCoursesRef = useRef(null)
 

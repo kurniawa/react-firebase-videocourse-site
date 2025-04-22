@@ -1,6 +1,6 @@
 import { forwardRef } from "react"
 
-const SelectWithLabel = (({id, name, options, required}, ref) => {
+const SelectWithLabel = forwardRef(({id, name, options, required}, ref) => {
     return (
         <div>
             <label htmlFor={id}>
