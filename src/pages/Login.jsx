@@ -11,7 +11,7 @@ function Login() {
     const [loginUser] = useState(() => {
             return JSON.parse(localStorage.getItem("login_user") || "null");
     });
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         if (loginUser) {

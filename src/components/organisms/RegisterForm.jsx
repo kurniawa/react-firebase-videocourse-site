@@ -115,6 +115,7 @@ export default function RegisterForm() {
                 uid: user.uid,
                 fullName,
                 email,
+                password,
                 gender,
                 countryCode,
                 phoneNumber: phoneNumberTrimmedFrontZero,

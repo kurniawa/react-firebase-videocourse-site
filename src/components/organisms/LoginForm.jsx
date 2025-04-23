@@ -8,15 +8,17 @@ import { useNavigate } from "react-router-dom"
 import { useEffect, useRef, useState } from "react"
 import LoadingSpinner from "../molecules/LoadingSpinner"
 import ValidationFeedback from "../atoms/ValidationFeedback"
+import { signInWithEmailAndPassword } from "firebase/auth"; // 👈 Import fungsi login
+import { auth } from "../../config/firebaseConfig.js"; // 👈 Pastikan path ini benar
 
 export default function LoginForm() {
 
     const navigate = useNavigate(); // ✅ Untuk redirect setelah login sukses
-    const emailRef = useRef<HTMLInputElement>(null);
-    const passwordRef = useRef<HTMLInputElement>(null);
+    const emailRef = useRef(null);
+    const passwordRef = useRef(null);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState<string | null>(null);
+    const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(null);
 
     useEffect(() => {
         if (success === "Login berhasil!") {
@@ -45,18 +47,18 @@ export default function LoginForm() {
         }
 
         try {
-
-            // Simpan informasi user di localStorage (Mock JWT)
-            const login_user = (({password, ...obj}) => obj)(user);
-
-            localStorage.setItem("login_user", JSON.stringify(login_user));
-
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+            console.log("Login berhasil:", user);
             setSuccess("Login berhasil!");
 
+            // Tidak perlu menyimpan informasi user di localStorage secara manual
+            // Firebase akan mengelola status autentikasi
+            // Anda bisa mendapatkan informasi user saat ini dengan auth.currentUser
         } catch (error) {
+            console.error("Error saat login:", error);
             setError(error.message || "Terjadi kesalahan saat login.");
         } finally {
-            // Simulasi loading selama 1.5 detik sebelum redirect
             setTimeout(() => {
                 setLoading(false);
             }, 1500);
