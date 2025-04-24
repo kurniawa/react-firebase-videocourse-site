@@ -7,92 +7,102 @@ import SelectForEditProfile from "../atoms/SelectForEditProfile";
 import ButtonLime500 from "../atoms/ButtonLime500";
 import Footer from "./Footer";
 import InputPasswordEP from "../atoms/InputPasswordEP";
-import { v4 as uuidv4 } from "uuid"; // Install dulu: npm install uuid
-import axios from "axios";
 import ValidationFeedback from "../atoms/ValidationFeedback";
 import LoadingSpinner from "../molecules/LoadingSpinner";
-// import { v2 as cloudinary } from 'cloudinary';
+
+import { updateProfile, updateEmail } from 'firebase/auth';
+import { doc, updateDoc, getFirestore } from 'firebase/firestore';
+import { auth } from '../../config/firebaseConfig'; // Pastikan path ini benar
+
+import { ref, uploadBytesResumable, getDownloadURL, getStorage } from 'firebase/storage';
+import { v4 as uuidv4 } from 'uuid';
 
 const EditProfile = ({type, loginUser}) => {
     let arrayButtonDashboard = [
-        {
-            active: type === "PROFILE" ? true : false,
-            label: "Profil Saya"
-        },
-        {
-            active: type === "MY-CLASS" ? true : false,
-            label: "Kelas Saya"
-        },
-        {
-            active: type === "MY-ORDER" ? true : false,
-            label: "Pesanan Saya"
-        }
-    ]
+        { active: type === "PROFILE", label: "Profil Saya" },
+        { active: type === "MY-CLASS", label: "Kelas Saya" },
+        { active: type === "MY-ORDER", label: "Pesanan Saya" }
+    ];
 
-    const fullNameRef = useRef<HTMLInputElement>(null);
-    const emailRef = useRef<HTMLInputElement>(null);
-    const genderRef = useRef<HTMLSelectElement>(null);
-    const countryCodeRef = useRef<HTMLSelectElement>(null);
-    const phoneNumberRef = useRef<HTMLInputElement>(null);
-    const passwordRef = useRef<HTMLInputElement>(null);
-    const passwordConfirmationRef = useRef<HTMLInputElement>(null);
-    
-    const profilePicturePathRef = useRef<HTMLInputElement>(null);
+    // State untuk mengelola nilai input
+    const [fullName, setFullName] = useState(loginUser?.fullName || "");
+    const [email, setEmail] = useState(loginUser?.email || "");
+    const [gender, setGender] = useState(loginUser?.gender || "");
+    const [countryCode, setCountryCode] = useState(loginUser?.countryCode || "");
+    const [phoneNumber, setPhoneNumber] = useState(loginUser?.phoneNumber || "");
+    const [password, setPassword] = useState("");
+    const [passwordConfirmation, setPasswordConfirmation] = useState("");
+    const [profilePicturePath, setProfilePicture] = useState(loginUser?.profilePicturePath || "");
 
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState<string | null>(null);
+    const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(null);
+
+    // Ref untuk elemen file input foto profil
+    const profilePicturePathRef = useRef(null);
+    // const phoneNumberRef = useRef({}); // Tambahkan ref untuk countryCode
 
     useEffect(() => {
-        // Set nilai input berdasarkan data user yang sudah login
-        if (fullNameRef.current) {
-          fullNameRef.current.value = loginUser.fullName;
+        // Set nilai state berdasarkan data loginUser saat komponen mount atau loginUser berubah
+        if (loginUser) {
+            setFullName(loginUser.fullName || "");
+            setEmail(loginUser.email || "");
+            setGender(loginUser.gender || "");
+            setCountryCode(loginUser.countryCode || "");
+            setPhoneNumber(loginUser.phoneNumber || "");
+            setProfilePicture(loginUser.profilePicturePath || "");
         }
-        if (emailRef.current) {
-          emailRef.current.value = loginUser.email;
-        }
-        if (genderRef.current) {
-            genderRef.current.value = loginUser.gender;
-        }
-        if (countryCodeRef.current) {
-            countryCodeRef.current.value = loginUser.countryCode;
-        }
-        if (phoneNumberRef.current) {
-            phoneNumberRef.current.value = loginUser.phoneNumber;
-        }
-    }, [loginUser]); // Jalankan setiap kali loginUser berubah
+    }, [loginUser]);
 
-    const [profilePicturePath, setProfilePicture] = useState(loginUser.profilePicturePath || "");
-
-    useEffect(() => {
-        // Load data dari localStorage jika ada
-        const storedUser = localStorage.getItem("login_user");
-        if (storedUser) {
-            const parsedUser = JSON.parse(storedUser);
-            setProfilePicture(parsedUser.profilePicturePath || "");
+    const handleInputChange = (name, value) => {
+        switch (name) {
+            case 'fullName':
+                setFullName(value);
+                break;
+            case 'email':
+                setEmail(value);
+                break;
+            case 'gender':
+                setGender(value);
+                break;
+            case 'countryCode':
+                setCountryCode(value);
+                break;
+            case 'phoneNumber':
+                setPhoneNumber(value);
+                break;
+            case 'password':
+                setPassword(value);
+                break;
+            case 'passwordConfirmation':
+                setPasswordConfirmation(value);
+                break;
+            default:
+                break;
         }
-    }, []);
+    };
 
     const handleEditProfile = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setError(null); // Reset error sebelum upload
+        setError(null);
         setSuccess(null);
-        const fullName = fullNameRef.current?.value?.trim() || "";
-        const email = emailRef.current?.value?.trim() || "";
-        const gender = genderRef.current?.value?.trim() || "";
-        const countryCode = countryCodeRef.current?.value?.trim() || "";
-        const phoneNumber = phoneNumberRef.current?.value?.trim() || "";
-        const password = passwordRef.current?.value; // Jangan trim password
-        const passwordConfirmation = passwordConfirmationRef.current?.value; // Jangan trim password
-        let phoneNumberFull = "";
+
+        const fullName = fullName; // Menggunakan state
+        const email = email; // Menggunakan state
+        const gender = gender; // Menggunakan state
+        const countryCode = countryCode; // Menggunakan state
+        const phoneNumber = phoneNumber; // Menggunakan state
+        const password = password; // Menggunakan state
+        const passwordConfirmation = passwordConfirmation; // Menggunakan state
+        const phoneNumberFull = `${countryCode}${phoneNumber.replace(/^0+/, "")}`;
 
         if (!fullName || !email || !gender || !countryCode || !phoneNumber) {
             setError("Semua kolom wajib diisi!");
             setLoading(false);
             return;
         }
-        
+
         if (password) {
             if (password.length < 8) {
                 setError("Password minimal 8 karakter");
@@ -104,9 +114,10 @@ const EditProfile = ({type, loginUser}) => {
                 setLoading(false);
                 return;
             }
+            // TODO: Implement update password using Firebase Auth
+            console.log("Update password functionality needs to be implemented.");
         }
 
-        // Validasi email dan nomor telepon
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             setError("Format email tidak valid");
@@ -114,132 +125,127 @@ const EditProfile = ({type, loginUser}) => {
             return;
         }
 
-        let phoneNumberTrimmedFrontZero = "";
-        // Hilangkan angka 0 di depan nomor telepon
-        phoneNumberTrimmedFrontZero = phoneNumber.replace(/^0+/, "");
-
-        phoneNumberFull = `${countryCode}${phoneNumberTrimmedFrontZero}`;
-        // console.log("Phone Number Full:", phoneNumberFull);
-
         try {
-            const {data: allUsers} = await axios.get(
-                `https://67c565bec4649b9551b67dc8.mockapi.io/api/v1/users`
-            );
-        
-            if (allUsers.length !== 0) {
-                // Lakukan pencocokan eksak di frontend
-                const exactMatchEmail = allUsers.find((user) => (user.email === email && user.id !== loginUser.id));
-                if (exactMatchEmail) {
-                    setError("Email sudah terdaftar");
-                    setLoading(false);
-                    return;
+            const user = auth.currentUser;
+            if (user) {
+                // Update display name dan email di Firebase Authentication
+                const updates = {};
+                if (fullName !== user.displayName) {
+                    updates.displayName = fullName;
+                }
+                if (email !== user.email) {
+                    await updateEmail(user, email);
+                    updates.email = email; // Optional: Update local state if needed
+                }
+                if (Object.keys(updates).length > 0) {
+                    await updateProfile(user, updates);
+                    console.log("Firebase Auth profile updated.");
                 }
 
-                const exactMatchPhoneNumberFull = allUsers.find((user) => (user.phoneNumberFull === phoneNumberFull && user.id !== loginUser.id));
-                if (exactMatchPhoneNumberFull) {
-                    setError("Nomor telepon sudah terdaftar");
-                    setLoading(false);
-                    return;
-                }
-            }
+                // Update data profil lainnya di Firestore
+                const userDocRef = doc(db, 'users', user.uid); // Asumsi koleksi 'users'
+                await updateDoc(userDocRef, {
+                    fullName: fullName,
+                    gender: gender,
+                    phoneNumber: phoneNumber.replace(/^0+/, ""),
+                    phoneNumberFull: phoneNumberFull,
+                    // Jangan update email dan displayName di sini karena sudah diupdate di Auth
+                });
+                console.log("Firestore profile updated.");
 
-        } catch (err) {
-            if (err.response?.status !== 404) { // Abaikan error 404 karena berarti email belum ada
-                setError("Terjadi kesalahan saat memeriksa email dan nomor telepon");
-                setLoading(false);
-                return;
-            }
-        }
+                // Update localStorage (sesuaikan dengan data yang Anda simpan)
+                const updatedUserForLocal = { ...loginUser, fullName, email, gender, countryCode, phoneNumber };
+                localStorage.setItem("login_user", JSON.stringify(updatedUserForLocal));
 
-        let editedUser = {fullName, email, gender, countryCode, phoneNumber: phoneNumberTrimmedFrontZero, phoneNumberFull}
-        if (password) {
-            editedUser = {...editedUser, password}
-        }
-        try {
-            await fetch(`https://67c565bec4649b9551b67dc8.mockapi.io/api/v1/users/${loginUser.id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(editedUser),
-            }).then(res => res.json())
-            .then(updatedUser => {
-                // Update localStorage
-                const login_user = (({password, ...obj}) => obj)(updatedUser);
-                localStorage.setItem("login_user", JSON.stringify(login_user));
-            
-                // (Opsional) Jika kamu punya state loginUser di React, update juga di situ
-                // setLoginUser(updatedUser);
-                
-                // Tambahkan notifikasi atau redirect jika perlu
-                console.log("Profile updated and localStorage synced.");
-            })
-            .catch(error => {
-                console.error("Failed to update profile:", error);
-            });
-            setSuccess("Profil berhasil diperbarui!");
-            setError(null); // Reset error jika berhasil
-            setProfilePicture(loginUser.profilePicturePath || ""); // Reset foto profil ke yang lama jika tidak diubah
+                setSuccess("Profil berhasil diperbarui!");
+                setError(null);
+            } else {
+                setError("Pengguna tidak ditemukan. Silakan login kembali.");
+            }
         } catch (error) {
-            setError(error.message);
+            console.error("Error updating profile:", error);
+            setError(error.message || "Terjadi kesalahan saat menyimpan profil.");
+            // Handle specific Firebase errors (e.g., email already in use)
+            if (error.code === 'auth/email-already-in-use') {
+                setError("Email sudah digunakan oleh akun lain.");
+            }
         } finally {
             setTimeout(() => {
                 setLoading(false);
             }, 1500);
         }
-    }
+    };
+
+    const storage = getStorage();
+    const db = getFirestore();
 
     const handleEditProfilePicture = async () => {
         setLoading(true);
-        setError(null); // Reset error sebelum upload
-        setSuccess(null); // Reset success sebelum upload
+        setError(null);
+        setSuccess(null);
         if (!profilePicturePathRef.current?.files?.[0]) {
             alert("Pilih gambar terlebih dahulu!");
+            setLoading(false);
             return;
         }
 
         const file = profilePicturePathRef.current.files[0];
-        const formData = new FormData();
+        const user = auth.currentUser;
 
-        // Buat nama unik dengan timestamp + UUID
-        const uniqueFilename = `profile_${Date.now()}_${uuidv4()}`;
+        if (!user) {
+            setError("Pengguna tidak ditemukan. Silakan login kembali.");
+            setLoading(false);
+            return;
+        }
 
-        formData.append("file", file);
-        formData.append("upload_preset", "ml_default"); // Ganti dengan upload preset yang sesuai
-        formData.append("folder", "profile_pictures"); // Ganti dengan folder yang sesuai
-        formData.append("public_id", uniqueFilename); // Set nama unik
+        // Buat nama file unik
+        const uniqueFilename = `profile_pictures/${user.uid}_${Date.now()}_${uuidv4()}`;
+        const storageRef = ref(storage, uniqueFilename);
 
         try {
-            const response = await fetch("https://api.cloudinary.com/v1_1/devktt8mf/image/upload", {
-                method: "POST",
-                body: formData,
-            });
+            const uploadTask = uploadBytesResumable(storageRef, file);
 
-            const data = await response.json();
-            // console.log("URL Gambar Baru:", data.secure_url);
+            uploadTask.on('state_changed',
+                (snapshot) => {
+                    // Observe state change events such as progress, pause, and resume:
+                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    console.log('Upload is ' + progress + '% done');
+                    // You can add progress updates to your UI here if needed
+                },
+                (error) => {
+                    // Handle unsuccessful uploads
+                    console.error("Error uploading image:", error);
+                    setError("Gagal mengunggah gambar!");
+                    setLoading(false);
+                },
+                async () => {
+                    // Handle successful uploads on complete
+                    // Get download URL
+                    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                    console.log('File available at', downloadURL);
+                    setProfilePicture(downloadURL);
 
-            // Update profile picture di state
-            setProfilePicture(data.secure_url);
+                    // Update Firestore
+                    const userDocRef = doc(db, 'users', user.uid);
+                    await updateDoc(userDocRef, {
+                        profilePicturePath: downloadURL,
+                        profilePicturePublicId: uniqueFilename // You might want to store the path/filename
+                    });
+                    console.log("Profile picture URL updated in Firestore.");
 
-            // Update localStorage
-            const updatedUser = { ...loginUser, profilePicturePath: data.secure_url, profilePicturePublicId: data.public_id };
-            localStorage.setItem("login_user", JSON.stringify(updatedUser));
+                    // Update localStorage
+                    const updatedUserForLocal = { ...loginUser, profilePicturePath: downloadURL };
+                    localStorage.setItem("login_user", JSON.stringify(updatedUserForLocal));
 
-            // Update MockAPI
-            await fetch(`https://67c565bec4649b9551b67dc8.mockapi.io/api/v1/users/${loginUser.id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ profilePicturePath: data.secure_url, profilePicturePublicId: data.public_id }),
-            });
-
-            setSuccess("Foto profil berhasil diperbarui!");
-            setError(null); // Reset error jika berhasil
+                    setSuccess("Foto profil berhasil diperbarui!");
+                    setError(null);
+                    setLoading(false);
+                }
+            );
         } catch (error) {
-            console.error("Upload gagal:", error);
-            setError("Gagal mengunggah gambar!");
-        } finally {
-            // Simulasi loading selama 1.5 detik
-            setTimeout(() => {
-                setLoading(false);
-            }, 1500);
+            console.error("Error during upload or update:", error);
+            setError("Gagal mengunggah dan memperbarui foto profil.");
+            setLoading(false);
         }
     };
 
@@ -286,14 +292,20 @@ const EditProfile = ({type, loginUser}) => {
 
                     <div className="flex flex-col gap-[16px] mt-2">
                         <div className="flex gap-[16px] flex-col xl:flex-row xl:justify-stretch">
-                            <InputForEditProfile label="Nama Lengkap" ref={fullNameRef} />
-                            <InputForEditProfile label="E-Mail" ref={emailRef} />
-                            <InputPhoneNumberEP label="No. Hp" countryCodeRef={countryCodeRef} phoneNumberRef={phoneNumberRef} />
+                            <InputForEditProfile label="Nama Lengkap" value={fullName} onChange={(e) => handleInputChange('fullName', e.target.value)} />
+                            <InputForEditProfile label="E-Mail" value={email} onChange={(e) => handleInputChange('email', e.target.value)} />
+                            <InputPhoneNumberEP
+                                label="No. Hp"
+                                countryCodeValue={countryCode}
+                                onCountryCodeChange={(e) => handleInputChange('countryCode', e.target.value)}
+                                phoneNumberValue={phoneNumber}
+                                onPhoneNumberChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                            />
                         </div>
                         <div className="flex gap-[16px] flex-col justify-stretch xl:flex-row">
-                            <SelectForEditProfile label="Jenis Kelamin" ref={genderRef} options={[{value: "Female", label: "Wanita"}, {value: "Male", label: "Pria"}]} />
-                            <InputPasswordEP label="Password" ref={passwordRef} />
-                            <InputPasswordEP label="Konfirmasi Password" ref={passwordConfirmationRef} />
+                            <SelectForEditProfile label="Jenis Kelamin" value={gender} onChange={(e) => handleInputChange('gender', e.target.value)} options={[{ value: "Female", label: "Wanita" }, { value: "Male", label: "Pria" }]} />
+                            <InputPasswordEP label="Password" value={password} onChange={(e) => handleInputChange('password', e.target.value)} />
+                            <InputPasswordEP label="Konfirmasi Password" value={passwordConfirmation} onChange={(e) => handleInputChange('passwordConfirmation', e.target.value)} />
                         </div>
                     </div>
 
