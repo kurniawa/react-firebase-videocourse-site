@@ -11,10 +11,10 @@ import ValidationFeedback from "../atoms/ValidationFeedback";
 import LoadingSpinner from "../molecules/LoadingSpinner";
 
 import { updateProfile, updateEmail } from 'firebase/auth';
-import { doc, updateDoc, getFirestore } from 'firebase/firestore';
+import { doc, updateDoc, getFirestore, getDoc } from 'firebase/firestore';
 import { auth } from '../../config/firebaseConfig'; // Pastikan path ini benar
 
-import { ref, uploadBytesResumable, getDownloadURL, getStorage } from 'firebase/storage';
+import { ref, uploadBytesResumable, getDownloadURL, getStorage, deleteObject } from 'firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
 
 const EditProfile = ({type, loginUser}) => {
@@ -30,27 +30,28 @@ const EditProfile = ({type, loginUser}) => {
     const [gender, setGender] = useState(loginUser?.gender || "");
     const [countryCode, setCountryCode] = useState(loginUser?.countryCode || "");
     const [phoneNumber, setPhoneNumber] = useState(loginUser?.phoneNumber || "");
-    const [password, setPassword] = useState("");
-    const [passwordConfirmation, setPasswordConfirmation] = useState("");
-    const [profilePicturePath, setProfilePicture] = useState(loginUser?.profilePicturePath || "");
+    const [password, setPassword] = useState(loginUser?.password || "");
+    const [passwordConfirmation, setPasswordConfirmation] = useState(loginUser?.password || "");
+    const [profilePictureURL, setProfilePictureURL] = useState(loginUser?.profilePictureURL || "");
+    const [profilePictureStoragePath, setProfilePictureStoragePath] = useState(loginUser?.profilePictureStoragePath || "");
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
 
     // Ref untuk elemen file input foto profil
-    const profilePicturePathRef = useRef(null);
+    const profilePictureURLRef = useRef(null);
     // const phoneNumberRef = useRef({}); // Tambahkan ref untuk countryCode
 
     useEffect(() => {
         // Set nilai state berdasarkan data loginUser saat komponen mount atau loginUser berubah
         if (loginUser) {
-            setFullName(loginUser.fullName || "");
             setEmail(loginUser.email || "");
             setGender(loginUser.gender || "");
             setCountryCode(loginUser.countryCode || "");
             setPhoneNumber(loginUser.phoneNumber || "");
-            setProfilePicture(loginUser.profilePicturePath || "");
+            setProfilePictureURL(loginUser.profilePictureURL || "");
+            setProfilePictureStoragePath(loginUser.profilePictureStoragePath || "");
         }
     }, [loginUser]);
 
@@ -183,13 +184,13 @@ const EditProfile = ({type, loginUser}) => {
         setLoading(true);
         setError(null);
         setSuccess(null);
-        if (!profilePicturePathRef.current?.files?.[0]) {
+        if (!profilePictureURLRef.current?.files?.[0]) {
             alert("Pilih gambar terlebih dahulu!");
             setLoading(false);
             return;
         }
 
-        const file = profilePicturePathRef.current.files[0];
+        const file = profilePictureURLRef.current.files[0];
         const user = auth.currentUser;
 
         if (!user) {
@@ -198,54 +199,79 @@ const EditProfile = ({type, loginUser}) => {
             return;
         }
 
-        // Buat nama file unik
-        const uniqueFilename = `profile_pictures/${user.uid}_${Date.now()}_${uuidv4()}`;
-        const storageRef = ref(storage, uniqueFilename);
+        const uniqueFilename = `profile_pictures/${user.uid}_${Date.now()}`;
+        const newFileRef = ref(storage, uniqueFilename);
+        let previousProfilePictureStoragePath = null;
 
         try {
-            const uploadTask = uploadBytesResumable(storageRef, file);
+            // 1. Dapatkan informasi profil pengguna dari Firestore untuk mendapatkan publicId foto profil sebelumnya
+            const userDocRef = doc(db, 'users', user.uid);
+            const docSnap = await getDoc(userDocRef);
 
-            uploadTask.on('state_changed',
-                (snapshot) => {
-                    // Observe state change events such as progress, pause, and resume:
-                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    console.log('Upload is ' + progress + '% done');
-                    // You can add progress updates to your UI here if needed
-                },
-                (error) => {
-                    // Handle unsuccessful uploads
-                    console.error("Error uploading image:", error);
-                    setError("Gagal mengunggah gambar!");
-                    setLoading(false);
-                },
-                async () => {
-                    // Handle successful uploads on complete
-                    // Get download URL
-                    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                    console.log('File available at', downloadURL);
-                    setProfilePicture(downloadURL);
+            if (docSnap.exists() && docSnap.data()?.profilePictureStoragePath) {
+                previousProfilePictureStoragePath = docSnap.data().profilePictureStoragePath;
+                console.log("Path Storage foto profil sebelumnya:", previousProfilePictureStoragePath);
+            }
 
-                    // Update Firestore
-                    const userDocRef = doc(db, 'users', user.uid);
-                    await updateDoc(userDocRef, {
-                        profilePicturePath: downloadURL,
-                        profilePicturePublicId: uniqueFilename // You might want to store the path/filename
-                    });
-                    console.log("Profile picture URL updated in Firestore.");
+            // 2. Upload foto profil yang baru
+            const uploadTask = uploadBytesResumable(newFileRef, file);
 
-                    // Update localStorage
-                    const updatedUserForLocal = { ...loginUser, profilePicturePath: downloadURL };
-                    localStorage.setItem("login_user", JSON.stringify(updatedUserForLocal));
+            await new Promise((resolve, reject) => {
+                uploadTask.on('state_changed',
+                    (snapshot) => {
+                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        console.log('Upload is ' + progress + '% done');
+                        // Tambahkan logika UI untuk menampilkan progress jika diperlukan
+                    },
+                    (error) => {
+                        console.error("Error uploading image:", error);
+                        setError("Gagal mengunggah gambar!");
+                        setLoading(false);
+                        reject(error);
+                    },
+                    async () => {
+                        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                        console.log('File available at', downloadURL);
+                        setProfilePictureURL(downloadURL);
 
-                    setSuccess("Foto profil berhasil diperbarui!");
-                    setError(null);
-                    setLoading(false);
+                        // 3. Update informasi foto profil di Firestore
+                        await updateDoc(userDocRef, {
+                            profilePictureURL: downloadURL,
+                            profilePictureStoragePath: uniqueFilename // Simpan path Storage
+                        });
+                        console.log("Informasi foto profil diperbarui di Firestore.");
+
+                        // 4. Update localStorage
+                        const updatedUserForLocal = { ...loginUser, profilePictureURL: downloadURL };
+                        localStorage.setItem("login_user", JSON.stringify(updatedUserForLocal));
+
+                        resolve();
+                    }
+                );
+            });
+
+            // 5. Hapus foto profil sebelumnya dari Storage jika ada dan berbeda dengan yang baru
+            if (previousProfilePictureStoragePath && previousProfilePictureStoragePath !== uniqueFilename) {
+                const previousFileRef = ref(storage, previousProfilePictureStoragePath);
+                try {
+                    await deleteObject(previousFileRef);
+                    console.log("Foto profil sebelumnya berhasil dihapus:", previousProfilePictureStoragePath);
+                } catch (deleteError) {
+                    console.error("Gagal menghapus foto profil sebelumnya:", deleteError);
+                    // Tidak perlu melempar error di sini karena ini bukan kegagalan utama
+                    // Mungkin tambahkan notifikasi atau log ke pengguna/admin
                 }
-            );
+            }
+
+            setSuccess("Foto profil berhasil diperbarui!");
+            setError(null);
         } catch (error) {
             console.error("Error during upload or update:", error);
             setError("Gagal mengunggah dan memperbarui foto profil.");
-            setLoading(false);
+        } finally {
+            setTimeout(() => {
+                setLoading(false);
+            }, 1500);
         }
     };
 
@@ -271,7 +297,7 @@ const EditProfile = ({type, loginUser}) => {
                     <div className="flex gap-[14px]">
                         {/* Foto Profil */}
                         <div className="w-20">
-                            {profilePicturePath ? <img src={profilePicturePath} alt="Profile" className="w-full h-20 rounded-[4px]" /> : 
+                            {profilePictureURL ? <img src={profilePictureURL} alt="Profile" className="w-full h-20 rounded-[4px]" /> : 
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-full">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
                             </svg>
@@ -279,12 +305,12 @@ const EditProfile = ({type, loginUser}) => {
                         </div>
 
                         <div>
-                            <div className="font-poppins font-[600] text-[16px] text-[#222325]">{loginUser.fullName}</div>
-                            <div className="font-dm-sans font-[400] text-[16px] text-[#222325]">{loginUser.email}</div>
+                            <div className="font-poppins font-[600] text-[16px] text-[#222325]">{fullName}</div>
+                            <div className="font-dm-sans font-[400] text-[16px] text-[#222325]">{email}</div>
                             <label htmlFor="change-profile-picture" className="font-poppins font-[700] text-[14px] text-[#F64920] hover:cursor-pointer">
                                 Ganti Foto Profil
                             </label>
-                            <input type="file" name="" id="change-profile-picture" className="hidden" ref={profilePicturePathRef} onChange={handleEditProfilePicture} accept="image/png, image/gif, image/jpeg" />
+                            <input type="file" name="" id="change-profile-picture" className="hidden" ref={profilePictureURLRef} onChange={handleEditProfilePicture} accept="image/png, image/gif, image/jpeg" />
                         </div>
                     </div>
 

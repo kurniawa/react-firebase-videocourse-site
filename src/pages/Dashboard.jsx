@@ -57,7 +57,7 @@ function Dashboard({type}) {
         <MainLayout>
             <main>
                 {error && <ValidationFeedbackWithSpinner type="error" message={error} />}
-                {loginUser && <EditProfile type={type} loginUser={loginUser} />}
+                {profileData && <EditProfile type={type} loginUser={profileData} />}
             </main>
         </MainLayout>
     );

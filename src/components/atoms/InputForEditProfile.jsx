@@ -1,4 +1,5 @@
 const InputForEditProfile = (({label, value, onChange}) => {
+  // console.log(label, value);
   return (
     <div className="relative group w-full">
         <label htmlFor="" className="absolute font-dm-sans font-[500] text-[14px] bg-white -top-3 left-2 px-1 text-[#333333AD] group-focus-within:text-[#3ECF4C]">{label}</label>

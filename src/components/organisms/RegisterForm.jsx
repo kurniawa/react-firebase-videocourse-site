@@ -121,7 +121,8 @@ export default function RegisterForm() {
                 phoneNumber: phoneNumberTrimmedFrontZero,
                 phoneNumberFull,
                 role: "USER",
-                profilePicturePath: "", // Inisialisasi path gambar profil
+                profilePictureURL: "", // Inisialisasi path gambar profil
+                profilePictureStoragePath: "", // Inisialisasi path gambar profil
                 createdAt: new Date(),
                 updatedAt: new Date(),
             });
