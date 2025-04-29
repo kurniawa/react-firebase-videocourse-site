@@ -63,3 +63,9 @@ function App() {
 }
 
 export default App
+
+// Pada misi sebelumnya, yakni Advanced FE 2 (videobelajar), saya menggunakan bantuan MockAPI sebagai database dan Cloudinary sebagai storage untuk menyimpan gambar.
+// Pada misi Intermediate FE 1 (videobelajar) ini, saya menggunakan Firebase, yakni Firestore sebagai database dan Storage untuk menyimpan gambar.
+// Sesuai dengan apa yang dikatakan oleh kak Timothy, bahwa pada misi FE Intermediate 1 ini, saya perlu untuk mengerjakan paling tidak halaman register, login dan homepage
+// Rules pada Firestore Database menggunakan mode testing, sehingga siapapun bisa melakukan CRUD
+// Rules pada Storage juga menggunakan mode testing, sehingga siapapun bisa melakukan CRUD

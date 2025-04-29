@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link,  useNavigate } from "react-router-dom";
 import LoadingSpinner from "./LoadingSpinner";
+import { auth } from "../../config/firebaseConfig";
 
 export default function HamburgerMenu({className, options}) {
 
@@ -9,8 +10,8 @@ export default function HamburgerMenu({className, options}) {
     const [loading, setLoading] = useState(false);
 
     const handleLogout = () => {
-        localStorage.removeItem("login_user");
         setLoading(true);
+        auth.signOut();
         setTimeout(() => {
             navigate("/login");
         }, 1500);

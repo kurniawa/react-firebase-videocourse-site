@@ -4,22 +4,21 @@ import MainLayout from "../layouts/MainLayout"
 import { useEffect, useState } from "react";
 import ValidationFeedback from "../components/atoms/ValidationFeedback";
 import LoadingSpinner from "../components/molecules/LoadingSpinner";
+import { auth } from "../config/firebaseConfig";
 
 function Login() {
     const navigate = useNavigate();
 
-    const [loginUser] = useState(() => {
-            return JSON.parse(localStorage.getItem("login_user") || "null");
-    });
+    const loginUser = auth.currentUser;
     const [error, setError] = useState(null);
 
+    if (loginUser) {
+        setError("Anda sudah login. Redirecting ke halaman dashboard...");
+        setTimeout(() => {
+            navigate("/dashboard");
+        }, 1500);
+    }
     useEffect(() => {
-        if (loginUser) {
-            setError("Anda sudah login. Redirecting ke halaman dashboard...");
-            setTimeout(() => {
-                navigate("/dashboard");
-            }, 1500);
-        }
     }, [loginUser, navigate]); // Tambahkan dependency
 
     

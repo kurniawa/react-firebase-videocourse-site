@@ -89,28 +89,28 @@ const EditProfile = ({type, loginUser}) => {
         setError(null);
         setSuccess(null);
 
-        const fullName = fullName; // Menggunakan state
-        const email = email; // Menggunakan state
-        const gender = gender; // Menggunakan state
-        const countryCode = countryCode; // Menggunakan state
-        const phoneNumber = phoneNumber; // Menggunakan state
-        const password = password; // Menggunakan state
-        const passwordConfirmation = passwordConfirmation; // Menggunakan state
-        const phoneNumberFull = `${countryCode}${phoneNumber.replace(/^0+/, "")}`;
+        const editedFullName = fullName; // Menggunakan state
+        const editedEmail = email; // Menggunakan state
+        const editedGender = gender; // Menggunakan state
+        const editedCountryCode = countryCode; // Menggunakan state
+        const editedPhoneNumber = phoneNumber; // Menggunakan state
+        const editedPassword = password; // Menggunakan state
+        const editedPasswordConfirmation = passwordConfirmation; // Menggunakan state
+        const editedPhoneNumberFull = `${countryCode}${phoneNumber.replace(/^0+/, "")}`;
 
-        if (!fullName || !email || !gender || !countryCode || !phoneNumber) {
+        if (!editedFullName || !editedEmail || !editedGender || !editedCountryCode || !editedPhoneNumber) {
             setError("Semua kolom wajib diisi!");
             setLoading(false);
             return;
         }
 
-        if (password) {
-            if (password.length < 8) {
+        if (editedPassword) {
+            if (editedPassword.length < 8) {
                 setError("Password minimal 8 karakter");
                 setLoading(false);
                 return;
             }
-            if (password !== passwordConfirmation) {
+            if (editedPassword !== editedPasswordConfirmation) {
                 setError("Password dan Konfirmasi Password tidak sama");
                 setLoading(false);
                 return;
@@ -131,10 +131,10 @@ const EditProfile = ({type, loginUser}) => {
             if (user) {
                 // Update display name dan email di Firebase Authentication
                 const updates = {};
-                if (fullName !== user.displayName) {
+                if (editedFullName !== user.displayName) {
                     updates.displayName = fullName;
                 }
-                if (email !== user.email) {
+                if (editedEmail !== user.email) {
                     await updateEmail(user, email);
                     updates.email = email; // Optional: Update local state if needed
                 }
@@ -146,17 +146,13 @@ const EditProfile = ({type, loginUser}) => {
                 // Update data profil lainnya di Firestore
                 const userDocRef = doc(db, 'users', user.uid); // Asumsi koleksi 'users'
                 await updateDoc(userDocRef, {
-                    fullName: fullName,
-                    gender: gender,
-                    phoneNumber: phoneNumber.replace(/^0+/, ""),
-                    phoneNumberFull: phoneNumberFull,
+                    fullName: editedFullName,
+                    gender: editedGender,
+                    phoneNumber: editedPhoneNumber.replace(/^0+/, ""),
+                    phoneNumberFull: editedPhoneNumberFull,
                     // Jangan update email dan displayName di sini karena sudah diupdate di Auth
                 });
                 console.log("Firestore profile updated.");
-
-                // Update localStorage (sesuaikan dengan data yang Anda simpan)
-                const updatedUserForLocal = { ...loginUser, fullName, email, gender, countryCode, phoneNumber };
-                localStorage.setItem("login_user", JSON.stringify(updatedUserForLocal));
 
                 setSuccess("Profil berhasil diperbarui!");
                 setError(null);
@@ -240,10 +236,6 @@ const EditProfile = ({type, loginUser}) => {
                             profilePictureStoragePath: uniqueFilename // Simpan path Storage
                         });
                         console.log("Informasi foto profil diperbarui di Firestore.");
-
-                        // 4. Update localStorage
-                        const updatedUserForLocal = { ...loginUser, profilePictureURL: downloadURL };
-                        localStorage.setItem("login_user", JSON.stringify(updatedUserForLocal));
 
                         resolve();
                     }

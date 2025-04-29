@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import LoadingSpinner from "./LoadingSpinner";
 import { useState } from "react";
+import { auth } from "../../config/firebaseConfig";
 
 const NavbarMenu = ({options, loginUser}) => {
 
@@ -9,8 +10,8 @@ const NavbarMenu = ({options, loginUser}) => {
     const [menuOpen, setMenuOpen] = useState(false);
 
     const handleLogout = () => {
-        localStorage.removeItem("login_user");
         setLoading(true);
+        auth.signOut();
         setTimeout(() => {
             navigate("/login");
         }, 1500);

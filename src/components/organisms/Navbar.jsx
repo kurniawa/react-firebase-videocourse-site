@@ -4,15 +4,13 @@ import NavbarMenu from "../molecules/NavbarMenu";
 
 export default function Navbar({loginUser}) {
 
-    const login_user = JSON.parse(localStorage.getItem("login_user") || "null");
-
     let options = [
         { label: "Kategori", path: "/", className: "font-color-333333AD" },
         { label: "Login", path: "/login", className: "bg-[#3ECF4C] text-white" },
         { label: "Register", path: "/register", className: "border border-[#3ECF4C] text-[#3ECF4C]"},
     ];
 
-    if (login_user) {
+    if (loginUser) {
         options = [
             { label: "Kategori", path: "/", className: "font-color-333333AD" },
             { label: "Dashboard", path: "/dashboard", className: "bg-[#3ECF4C] text-white"},
