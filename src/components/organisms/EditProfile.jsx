@@ -310,8 +310,8 @@ const EditProfile = ({type, loginUser}) => {
 
                     <div className="flex flex-col gap-[16px] mt-2">
                         <div className="flex gap-[16px] flex-col xl:flex-row xl:justify-stretch">
-                            <InputForEditProfile label="Nama Lengkap" value={fullName} onChange={(e) => handleInputChange('fullName', e.target.value)} />
-                            <InputForEditProfile label="E-Mail" value={email} onChange={(e) => handleInputChange('email', e.target.value)} />
+                            <InputForEditProfile label="Nama Lengkap" value={fullName} onChange={(e) => handleInputChange('fullName', e.target.value)} disabled={false} />
+                            <InputForEditProfile label="E-Mail" value={email} onChange={(e) => handleInputChange('email', e.target.value)} disabled={true} />
                             <InputPhoneNumberEP
                                 label="No. Hp"
                                 countryCodeValue={countryCode}
@@ -322,8 +322,8 @@ const EditProfile = ({type, loginUser}) => {
                         </div>
                         <div className="flex gap-[16px] flex-col justify-stretch xl:flex-row">
                             <SelectForEditProfile label="Jenis Kelamin" value={gender} onChange={(e) => handleInputChange('gender', e.target.value)} options={[{ value: "Female", label: "Wanita" }, { value: "Male", label: "Pria" }]} />
-                            <InputPasswordEP label="Password" value={password} onChange={(e) => handleInputChange('password', e.target.value)} />
-                            <InputPasswordEP label="Konfirmasi Password" value={passwordConfirmation} onChange={(e) => handleInputChange('passwordConfirmation', e.target.value)} />
+                            <InputPasswordEP label="Password" value={password} onChange={(e) => handleInputChange('password', e.target.value)} disable={true}/>
+                            <InputPasswordEP label="Konfirmasi Password" value={passwordConfirmation} onChange={(e) => handleInputChange('passwordConfirmation', e.target.value)} disable={true}/>
                         </div>
                     </div>
 

@@ -9,13 +9,22 @@ const NavbarMenu = ({options, loginUser}) => {
     const [loading, setLoading] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
         setLoading(true);
-        auth.signOut();
-        setTimeout(() => {
-            navigate("/login");
-        }, 1500);
-    }
+        try {
+            await auth.signOut();
+            // Redirect ke halaman login setelah logout berhasil
+            setTimeout(() => {
+                navigate("/login");
+            }, 1500);
+        } catch (error) {
+            console.error("Gagal logout:", error);
+            // Tampilkan pesan error kepada pengguna jika perlu
+            // Misalnya: setError("Terjadi kesalahan saat logout.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <>

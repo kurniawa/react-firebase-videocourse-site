@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const InputPasswordEP = ({ label, value, onChange }) => {
+const InputPasswordEP = ({ label, value, onChange, disable }) => {
     const [showPassword, setShowPassword] = useState(false);
 
     return (
@@ -15,6 +15,7 @@ const InputPasswordEP = ({ label, value, onChange }) => {
                     type={showPassword ? "text" : "password"}
                     value={value}
                     onChange={onChange}
+                    disabled={disable}
                     className="rounded-md px-[10px] py-[4px] w-full h-[48px] border border-[#3A35411F] focus:border-[#3ECF4C] focus:outline-none focus:ring-0"
                 />
                 <button

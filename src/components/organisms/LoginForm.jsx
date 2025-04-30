@@ -49,7 +49,7 @@ export default function LoginForm() {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
-            console.log("Login berhasil:", user);
+            // console.log("Login berhasil:", user);
             setSuccess("Login berhasil!");
 
             // Tidak perlu menyimpan informasi user di localStorage secara manual

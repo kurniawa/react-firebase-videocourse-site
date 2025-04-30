@@ -128,6 +128,10 @@ export default function RegisterForm() {
             });
 
             setSuccess("Pendaftaran berhasil! Silakan login.");
+
+            // Setelah registrasi berhasil, lakukan sign out
+            await auth.signOut();
+
             setTimeout(() => {
                 navigate("/login");
                 setLoading(false);

@@ -9,13 +9,23 @@ export default function HamburgerMenu({className, options}) {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
         setLoading(true);
-        auth.signOut();
-        setTimeout(() => {
-            navigate("/login");
-        }, 1500);
-    }
+        try {
+            await auth.signOut();
+            // Redirect ke halaman login setelah logout berhasil
+            setLoading(false);
+            setTimeout(() => {
+                navigate("/login");
+            }, 1500);
+        } catch (error) {
+            console.error("Gagal logout:", error);
+            // Tampilkan pesan error kepada pengguna jika perlu
+            // Misalnya: setError("Terjadi kesalahan saat logout.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <>
@@ -30,7 +40,7 @@ export default function HamburgerMenu({className, options}) {
 
             {/* Dropdown Menu */}
             {menuOpen && (
-                <div className="absolute top-16 right-4 bg-white shadow-lg w-40 flex flex-col border border-[#3A35411F]">
+                <div className="absolute top-16 right-4 bg-white shadow-lg w-40 flex flex-col border border-[#3A35411F] z-10">
                 {options.map((option, index) => {
                     if (option.label === "Log out") {
                         return (

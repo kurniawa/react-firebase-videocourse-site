@@ -29,7 +29,7 @@ function Dashboard({type}) {
 
                     if (docSnap.exists()) {
                         setProfileData(docSnap.data());
-                        console.log('Data profil pengguna dari Firestore:', docSnap.data());
+                        // console.log('Data profil pengguna dari Firestore:', docSnap.data());
                     } else {
                         console.log('Dokumen pengguna tidak ditemukan di Firestore.');
                         setError('Data profil pengguna tidak ditemukan.');
