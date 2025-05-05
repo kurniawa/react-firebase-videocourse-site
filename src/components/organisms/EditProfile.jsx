@@ -17,7 +17,7 @@ import { auth } from '../../config/firebaseConfig'; // Pastikan path ini benar
 import { ref, uploadBytesResumable, getDownloadURL, getStorage, deleteObject } from 'firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
 
-const EditProfile = ({type, loginUser}) => {
+const EditProfile = ({type, loggedInUser}) => {
     let arrayButtonDashboard = [
         { active: type === "PROFILE", label: "Profil Saya" },
         { active: type === "MY-CLASS", label: "Kelas Saya" },
@@ -25,15 +25,15 @@ const EditProfile = ({type, loginUser}) => {
     ];
 
     // State untuk mengelola nilai input
-    const [fullName, setFullName] = useState(loginUser?.fullName || "");
-    const [email, setEmail] = useState(loginUser?.email || "");
-    const [gender, setGender] = useState(loginUser?.gender || "");
-    const [countryCode, setCountryCode] = useState(loginUser?.countryCode || "");
-    const [phoneNumber, setPhoneNumber] = useState(loginUser?.phoneNumber || "");
-    const [password, setPassword] = useState(loginUser?.password || "");
-    const [passwordConfirmation, setPasswordConfirmation] = useState(loginUser?.password || "");
-    const [profilePictureURL, setProfilePictureURL] = useState(loginUser?.profilePictureURL || "");
-    const [profilePictureStoragePath, setProfilePictureStoragePath] = useState(loginUser?.profilePictureStoragePath || "");
+    const [fullName, setFullName] = useState(loggedInUser?.fullName || "");
+    const [email, setEmail] = useState(loggedInUser?.email || "");
+    const [gender, setGender] = useState(loggedInUser?.gender || "");
+    const [countryCode, setCountryCode] = useState(loggedInUser?.countryCode || "");
+    const [phoneNumber, setPhoneNumber] = useState(loggedInUser?.phoneNumber || "");
+    const [password, setPassword] = useState(loggedInUser?.password || "");
+    const [passwordConfirmation, setPasswordConfirmation] = useState(loggedInUser?.password || "");
+    const [profilePictureURL, setProfilePictureURL] = useState(loggedInUser?.profilePictureURL || "");
+    const [profilePictureStoragePath, setProfilePictureStoragePath] = useState(loggedInUser?.profilePictureStoragePath || "");
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -44,16 +44,16 @@ const EditProfile = ({type, loginUser}) => {
     // const phoneNumberRef = useRef({}); // Tambahkan ref untuk countryCode
 
     useEffect(() => {
-        // Set nilai state berdasarkan data loginUser saat komponen mount atau loginUser berubah
-        if (loginUser) {
-            setEmail(loginUser.email || "");
-            setGender(loginUser.gender || "");
-            setCountryCode(loginUser.countryCode || "");
-            setPhoneNumber(loginUser.phoneNumber || "");
-            setProfilePictureURL(loginUser.profilePictureURL || "");
-            setProfilePictureStoragePath(loginUser.profilePictureStoragePath || "");
+        // Set nilai state berdasarkan data loggedInUser saat komponen mount atau loggedInUser berubah
+        if (loggedInUser) {
+            setEmail(loggedInUser.email || "");
+            setGender(loggedInUser.gender || "");
+            setCountryCode(loggedInUser.countryCode || "");
+            setPhoneNumber(loggedInUser.phoneNumber || "");
+            setProfilePictureURL(loggedInUser.profilePictureURL || "");
+            setProfilePictureStoragePath(loggedInUser.profilePictureStoragePath || "");
         }
-    }, [loginUser]);
+    }, [loggedInUser]);
 
     const handleInputChange = (name, value) => {
         switch (name) {

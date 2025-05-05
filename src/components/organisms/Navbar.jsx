@@ -1,8 +1,38 @@
 import HamburgerMenu from "../molecules/HamburgerMenu";
 import LogoVideobelajar from "../atoms/LogoVideobelajar";
 import NavbarMenu from "../molecules/NavbarMenu";
+import { useDispatch, useSelector } from "react-redux";
 
-export default function Navbar({loginUser}) {
+export default function Navbar() {
+    // const dispatch = useDispatch();
+    // const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+    // const [isAuthChecked, setIsAuthChecked] = useState(false); // State untuk menandakan bahwa pemeriksaan auth awal selesai
+
+    // useEffect(() => {
+    //     // Memantau perubahan status autentikasi saat komponen App pertama kali mount
+    //     const unsubscribe = dispatch(authStateChanged(() => setIsAuthChecked(true)));
+    
+    //     // Opsional: Fungsi cleanup untuk unsubscribe listener saat komponen unmount
+    //     return () => {
+    //         if (unsubscribe && typeof unsubscribe === 'function') {
+    //             unsubscribe();
+    //         }
+    //     };
+    //   }, [dispatch]);
+    
+    //   useEffect(() => {
+    //     console.log("isAuthChecked:", isAuthChecked);
+    //     console.log("isAuthenticated:", isAuthenticated);
+    //     if (isAuthChecked && isAuthenticated) {
+    //         setError('Anda telah login. Anda akan dialihkan.');
+    //         setTimeout(() => {
+    //             // navigate("/dashboard");
+    //         }, 1500);
+    //     }
+    //   }, [isAuthChecked, isAuthenticated, navigate]);
+
+    const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+    // console.log("isAuthenticated:", isAuthenticated);
 
     let options = [
         { label: "Kategori", path: "/", className: "font-color-333333AD" },
@@ -10,7 +40,7 @@ export default function Navbar({loginUser}) {
         { label: "Register", path: "/register", className: "border border-[#3ECF4C] text-[#3ECF4C]"},
     ];
 
-    if (loginUser) {
+    if (isAuthenticated) {
         options = [
             { label: "Kategori", path: "/", className: "font-color-333333AD" },
             { label: "Dashboard", path: "/dashboard", className: "bg-[#3ECF4C] text-white"},
@@ -25,7 +55,7 @@ export default function Navbar({loginUser}) {
         </div>
 
         <div className="hidden xl:flex xl:gap-[16px]">
-            <NavbarMenu loginUser={loginUser} options={options} />
+            <NavbarMenu options={options} />
         </div>
         
         {/* Hamburger Menu untuk layar kecil */}

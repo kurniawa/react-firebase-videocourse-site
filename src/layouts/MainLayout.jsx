@@ -1,29 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Navbar from "../components/organisms/Navbar";
-import { auth } from "../config/firebaseConfig";
+import { useDispatch } from "react-redux";
+import { authStateChanged } from "../store/actions/authActions";
 
 export default function MainLayout({ children }) {
-    const [loginUser, setLoginUser] = useState(null); // Inisialisasi dengan null
-    const [loading, setLoading] = useState(true); // Tambahkan state loading
-
+    const dispatch = useDispatch();
     useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged((user) => {
-            setLoginUser(user);
-            setLoading(false); // Set loading ke false setelah status diketahui
-        });
-
-        // Unsubscribe listener saat komponen unmount
-        return () => unsubscribe();
-    }, []);
-
-    if (loading) {
-        // Tampilkan indikator loading jika status belum diketahui
-        return <div>Loading...</div>;
-    }
+        const unsubscribe = dispatch(authStateChanged());
+        return () => {
+            if (unsubscribe && typeof unsubscribe === 'function') {
+                unsubscribe();
+            }
+        };
+    }, [dispatch]); // Hanya bergantung pada dispatch agar tidak re-run
 
     return (
         <div className="relateive min-h-screen flex flex-col">
-            <Navbar loginUser={loginUser} />
+            <Navbar />
             {children}
         </div>
     );

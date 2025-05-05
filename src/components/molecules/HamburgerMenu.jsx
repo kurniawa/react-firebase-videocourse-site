@@ -1,29 +1,28 @@
 import { useState } from "react";
 import { Link,  useNavigate } from "react-router-dom";
 import LoadingSpinner from "./LoadingSpinner";
-import { auth } from "../../config/firebaseConfig";
+import { useDispatch } from "react-redux";
+import { logout } from "../../store/actions/authActions";
 
 export default function HamburgerMenu({className, options}) {
 
     const [menuOpen, setMenuOpen] = useState(false);
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const dispatch = useDispatch();
 
     const handleLogout = async () => {
         setLoading(true);
         try {
-            await auth.signOut();
-            // Redirect ke halaman login setelah logout berhasil
-            setLoading(false);
-            setTimeout(() => {
-                navigate("/login");
-            }, 1500);
+          // Dispatch action logout yang akan menangani signOut dari Firebase dan membersihkan state Redux
+          await dispatch(logout());
+          // Setelah action logout selesai (berhasil), kita bisa langsung melakukan navigasi
+          navigate("/login");
         } catch (error) {
-            console.error("Gagal logout:", error);
-            // Tampilkan pesan error kepada pengguna jika perlu
-            // Misalnya: setError("Terjadi kesalahan saat logout.");
+          console.error("Gagal logout:", error);
+          // Tampilkan pesan error kepada pengguna
         } finally {
-            setLoading(false);
+          setLoading(false);
         }
     };
 

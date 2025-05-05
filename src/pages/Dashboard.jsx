@@ -3,61 +3,68 @@ import EditProfile from "../components/organisms/EditProfile";
 import MainLayout from "../layouts/MainLayout";
 import { useEffect, useState } from "react";
 import ValidationFeedbackWithSpinner from "../components/molecules/ValidationFeedbackWithSpinner";
-import { auth, db } from "../config/firebaseConfig";
-import { doc, getDoc } from 'firebase/firestore';
+import { useDispatch, useSelector } from "react-redux";
+import { authStateChanged, fetchUserProfile } from "../store/actions/authActions";
 
 function Dashboard({type}) {
-    const [loginUser, setLoginUser] = useState(null);
-    const [profileData, setProfileData] = useState(null);
     const navigate = useNavigate();
-    const [loading, setLoading] = useState(true);
-    const [profileLoading, setProfileLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const dispatch = useDispatch();
+    const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+    const [isAuthChecked, setIsAuthChecked] = useState(true); // State untuk menandakan bahwa pemeriksaan auth awal selesai
+    const loggedInUser = useSelector((state) => state.auth.loggedInUser);
+    const [loading, setLoading] = useState(true); // Loading awal saat memeriksa status auth
+    const [error, setError] = useState(null); // Error jika ada saat memuat data profil
+    const profileData = useSelector((state) => state.auth.profileData);
+    const profileLoading = useSelector((state) => state.auth.profileLoading);
+    const profileError = useSelector((state) => state.auth.profileError);
 
     useEffect(() => {
-        const unsubscribeAuth = auth.onAuthStateChanged(async (user) => {
-            setLoginUser(user);
-            setLoading(false);
-
-            if (user) {
-                // Pengguna login, ambil data profil dari Firestore
-                setProfileLoading(true);
-                setError(null);
-                try {
-                    const userDocRef = doc(db, 'users', user.uid); // Asumsi koleksi 'users' dan dokumen ID adalah UID pengguna
-                    const docSnap = await getDoc(userDocRef);
-
-                    if (docSnap.exists()) {
-                        setProfileData(docSnap.data());
-                        // console.log('Data profil pengguna dari Firestore:', docSnap.data());
-                    } else {
-                        console.log('Dokumen pengguna tidak ditemukan di Firestore.');
-                        setError('Data profil pengguna tidak ditemukan.');
-                    }
-                } catch (error) {
-                    console.error('Error fetching user profile:', error);
-                    setError('Gagal mengambil data profil.');
-                } finally {
-                    setProfileLoading(false);
+            // Memantau perubahan status autentikasi saat komponen App pertama kali mount
+            const unsubscribe = dispatch(authStateChanged(() => setIsAuthChecked(true)));
+        
+            // Opsional: Fungsi cleanup untuk unsubscribe listener saat komponen unmount
+            return () => {
+                if (unsubscribe && typeof unsubscribe === 'function') {
+                    unsubscribe();
                 }
-            } else {
-                // Pengguna logout, redirect
-                navigate('/login');
+            };
+          }, [dispatch]);
+        
+          useEffect(() => {
+            console.log("isAuthChecked:", isAuthChecked);
+            console.log("isAuthenticated:", isAuthenticated);
+            if (!isAuthChecked && isAuthenticated) {
+                setError('Anda harus login untuk mengakses halaman ini.');
+                setTimeout(() => {
+                    navigate("/login");
+                }, 1500);
             }
-        });
+          }, [isAuthChecked, isAuthenticated, navigate]);
 
-        return () => unsubscribeAuth();
-    }, [navigate]);
+    useEffect(() => {
+        if (loggedInUser && !profileData && !profileLoading && !profileError) {
+            // Jika login dan data profil belum ada, fetch data
+            dispatch(fetchUserProfile(loggedInUser.uid));
+        }
+    }, [loggedInUser, profileData, profileError, profileError]);
 
-    if (loading) {
-        return <div>Loading authentication status...</div>;
-    }
+    // if (loading) {
+    //     return <div>Loading authentication status...</div>;
+    // }
+
+    // if (profileLoading) {
+    //     return <div>Loading profile data...</div>;
+    // }
+
+    // if (profileError) {
+    //     return <div>Error loading profile: {profileError}</div>;
+    // }
 
     return (
         <MainLayout>
             <main>
                 {error && <ValidationFeedbackWithSpinner type="error" message={error} />}
-                {profileData && <EditProfile type={type} loginUser={profileData} />}
+                {isAuthenticated && <EditProfile type={type} loggedInUser={loggedInUser} />}
             </main>
         </MainLayout>
     );

@@ -4,34 +4,41 @@ import MainLayout from "../layouts/MainLayout";
 import { useEffect, useState } from "react";
 import ValidationFeedback from "../components/atoms/ValidationFeedback";
 import LoadingSpinner from "../components/molecules/LoadingSpinner";
+// import { auth } from "../config/firebaseConfig";
+import { useDispatch, useSelector } from "react-redux";
+import { authStateChanged } from "../store/actions/authActions";
 import { auth } from "../config/firebaseConfig";
 
 function Login() {
-    const navigate = useNavigate();
-    const [loginUser, setLoginUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
+    const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+    const [isAuthChecked, setIsAuthChecked] = useState(false); // State untuk menandakan bahwa pemeriksaan auth awal selesai
 
     useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged((user) => {
-            setLoginUser(user);
-            setLoading(false);
-        });
-
-        // Unsubscribe listener saat komponen unmount
-        return () => unsubscribe();
-    }, []);
-
-    useEffect(() => {
-        if (!loading) {
-            if (loginUser) {
-                setError("Anda sudah login. Mengarahkan ke halaman dashboard...");
-                setTimeout(() => {
-                    navigate("/dashboard");
-                }, 1500);
+        // Memantau perubahan status autentikasi saat komponen App pertama kali mount
+        const unsubscribe = dispatch(authStateChanged(() => setIsAuthChecked(true)));
+    
+        // Opsional: Fungsi cleanup untuk unsubscribe listener saat komponen unmount
+        return () => {
+            if (unsubscribe && typeof unsubscribe === 'function') {
+                unsubscribe();
             }
+        };
+      }, [dispatch]);
+    
+      useEffect(() => {
+        // console.log("isAuthChecked:", isAuthChecked);
+        // console.log("isAuthenticated:", isAuthenticated);
+        if (isAuthChecked && isAuthenticated) {
+            setError('Anda telah login. Anda akan dialihkan.');
+            setTimeout(() => {
+                navigate("/dashboard");
+            }, 1500);
         }
-    }, [loginUser, loading, navigate]);
+      }, [isAuthChecked, isAuthenticated, navigate]);
 
     return (
         <MainLayout>
@@ -46,7 +53,7 @@ function Login() {
                 )}
             </div>
             <main className="px-[20px] py-[28px] flex justify-center xl:py-[64px] xl:px-[120px]">
-                {!loginUser && <LoginForm />} {/* Tampilkan LoginForm hanya jika belum login */}
+                {!isAuthenticated && <LoginForm />} {/* Tampilkan LoginForm hanya jika belum login */}
             </main>
         </MainLayout>
     );
