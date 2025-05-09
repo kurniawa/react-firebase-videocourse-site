@@ -3,7 +3,7 @@ import { setUser, clearUser, setProfileData, setProfileLoading, setProfileError 
 // import { auth, /* tambahkan modul Firebase lain jika perlu */ } from '../../firebase';
 import { auth, db } from '../../config/firebaseConfig';
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, Timestamp } from 'firebase/firestore';
 
 // Action untuk mengatur user saat autentikasi berubah (misalnya saat login atau logout)
 export const authStateChanged = (onAuthChecked) => (dispatch) => {
@@ -75,7 +75,17 @@ export const fetchUserProfile = (uid) => async (dispatch) => {
         const docSnap = await getDoc(userDocRef);
     
         if (docSnap.exists()) {
-            dispatch(setProfileData(docSnap.data()));
+          const profileData = docSnap.data();
+
+          // Konversi Timestamp ke format serializable (contoh: Unix timestamp dalam milidetik)
+          if (profileData.updatedAt instanceof Timestamp) {
+            profileData.updatedAt = profileData.updatedAt.toMillis();
+          }
+          if (profileData.createdAt instanceof Timestamp) {
+            profileData.createdAt = profileData.createdAt.toMillis();
+          }
+    
+          dispatch(setProfileData(profileData));
         } else {
             dispatch(setProfileError('Data profil pengguna tidak ditemukan.'));
         }

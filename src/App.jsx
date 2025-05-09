@@ -64,9 +64,8 @@ function App() {
 
 export default App
 
-// Pada misi sebelumnya, yakni Intermediate FE 2 (videobelajar), saya menggunakan bantuan MockAPI sebagai database dan Cloudinary sebagai storage untuk menyimpan gambar.
-// Pada misi Advance FE 1 (videobelajar) ini, saya menggunakan Firebase, dimana Firebase Firestore sebagai database dan Storage untuk menyimpan gambar, serta Firebase Hosting untuk hostingnya.
-// Sesuai dengan instruksi dari kak Timothy, halaman yang perlu dikerjakan minimal adalah register, login dan homepage. Disamping itu, saya juga mengerjakan halaman dashboard, sehingga user dapat melakukan update data.
+// Pada misi Advance FE 2 ini, saya melanjutkan proyek videobelajar sebelumnya yang telah mengimplementasikan Firebase Firestore sebagai database, lalu Storage untuk menyimpan gambar, lalu menggunakan Firebase Authentication untuk proses autentikasi, serta Firebase Hosting untuk hostingnya.
+// Pada misi kali ini, saya menambahkan fitur pengembangan dengan menggunakan Redux sebagai state management.
 // Rules pada Firestore Database dan Storage menggunakan mode testing, sehingga siapapun bisa melakukan CRUD
 // Fitur yang dikerjakan: User dapat melakukan register, login, logout, update profile, dan mengupload serta mengubah foto profile. Redirect apabila user sudah login ke halaman dashboard. Redirect apabila user sudah logout ke halaman login. Data profile yang belum dapat diubah adalah email dan password, karena pada firebase, masih butuh konfigurasi lebih lanjut terkait fitur tersebut.
 // Halaman yang dikerjakan: Register, Login, Homepage, Dashboard (Edit Profile)

@@ -14,39 +14,29 @@ function Dashboard({type}) {
     const loggedInUser = useSelector((state) => state.auth.loggedInUser);
     const [loading, setLoading] = useState(true); // Loading awal saat memeriksa status auth
     const [error, setError] = useState(null); // Error jika ada saat memuat data profil
-    const profileData = useSelector((state) => state.auth.profileData);
-    const profileLoading = useSelector((state) => state.auth.profileLoading);
-    const profileError = useSelector((state) => state.auth.profileError);
 
     useEffect(() => {
-            // Memantau perubahan status autentikasi saat komponen App pertama kali mount
-            const unsubscribe = dispatch(authStateChanged(() => setIsAuthChecked(true)));
-        
-            // Opsional: Fungsi cleanup untuk unsubscribe listener saat komponen unmount
-            return () => {
-                if (unsubscribe && typeof unsubscribe === 'function') {
-                    unsubscribe();
-                }
-            };
-          }, [dispatch]);
-        
-          useEffect(() => {
-            console.log("isAuthChecked:", isAuthChecked);
-            console.log("isAuthenticated:", isAuthenticated);
-            if (!isAuthChecked && isAuthenticated) {
-                setError('Anda harus login untuk mengakses halaman ini.');
-                setTimeout(() => {
-                    navigate("/login");
-                }, 1500);
+        // Memantau perubahan status autentikasi saat komponen App pertama kali mount
+        const unsubscribe = dispatch(authStateChanged(() => setIsAuthChecked(true)));
+    
+        // Opsional: Fungsi cleanup untuk unsubscribe listener saat komponen unmount
+        return () => {
+            if (unsubscribe && typeof unsubscribe === 'function') {
+                unsubscribe();
             }
-          }, [isAuthChecked, isAuthenticated, navigate]);
-
+        };
+    }, [dispatch]);
+        
     useEffect(() => {
-        if (loggedInUser && !profileData && !profileLoading && !profileError) {
-            // Jika login dan data profil belum ada, fetch data
-            dispatch(fetchUserProfile(loggedInUser.uid));
-        }
-    }, [loggedInUser, profileData, profileError, profileError]);
+    // console.log("isAuthChecked:", isAuthChecked);
+    // console.log("isAuthenticated:", isAuthenticated);
+    if (!isAuthChecked && isAuthenticated) {
+        setError('Anda harus login untuk mengakses halaman ini.');
+        setTimeout(() => {
+            navigate("/login");
+        }, 1500);
+    }
+    }, [isAuthChecked, isAuthenticated, navigate]);
 
     // if (loading) {
     //     return <div>Loading authentication status...</div>;
@@ -64,7 +54,7 @@ function Dashboard({type}) {
         <MainLayout>
             <main>
                 {error && <ValidationFeedbackWithSpinner type="error" message={error} />}
-                {isAuthenticated && <EditProfile type={type} loggedInUser={loggedInUser} />}
+                {isAuthenticated && <EditProfile type={type} />}
             </main>
         </MainLayout>
     );

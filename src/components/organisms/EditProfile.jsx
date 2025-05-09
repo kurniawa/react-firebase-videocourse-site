@@ -15,9 +15,26 @@ import { doc, updateDoc, getFirestore, getDoc } from 'firebase/firestore';
 import { auth } from '../../config/firebaseConfig'; // Pastikan path ini benar
 
 import { ref, uploadBytesResumable, getDownloadURL, getStorage, deleteObject } from 'firebase/storage';
-import { v4 as uuidv4 } from 'uuid';
+import { useDispatch, useSelector } from "react-redux";
+import { fetchUserProfile } from "../../store/actions/authActions";
 
-const EditProfile = ({type, loggedInUser}) => {
+const EditProfile = ({type}) => {
+    const loggedInUser = useSelector((state) => state.auth.loggedInUser);
+    const profileData = useSelector((state) => state.auth.profileData);
+    const profileLoading = useSelector((state) => state.auth.profileLoading);
+    const profileError = useSelector((state) => state.auth.profileError);
+
+    const dispatch = useDispatch();
+
+    useEffect(() => {
+        if (loggedInUser && !profileData && !profileLoading && !profileError) {
+            // Jika login dan data profil belum ada, fetch data
+            dispatch(fetchUserProfile(loggedInUser.uid));
+        }
+    }, [loggedInUser, profileData, profileError, profileError]);
+
+    // console.log("profileData:", profileData);
+
     let arrayButtonDashboard = [
         { active: type === "PROFILE", label: "Profil Saya" },
         { active: type === "MY-CLASS", label: "Kelas Saya" },
@@ -25,15 +42,15 @@ const EditProfile = ({type, loggedInUser}) => {
     ];
 
     // State untuk mengelola nilai input
-    const [fullName, setFullName] = useState(loggedInUser?.fullName || "");
-    const [email, setEmail] = useState(loggedInUser?.email || "");
-    const [gender, setGender] = useState(loggedInUser?.gender || "");
-    const [countryCode, setCountryCode] = useState(loggedInUser?.countryCode || "");
-    const [phoneNumber, setPhoneNumber] = useState(loggedInUser?.phoneNumber || "");
-    const [password, setPassword] = useState(loggedInUser?.password || "");
-    const [passwordConfirmation, setPasswordConfirmation] = useState(loggedInUser?.password || "");
-    const [profilePictureURL, setProfilePictureURL] = useState(loggedInUser?.profilePictureURL || "");
-    const [profilePictureStoragePath, setProfilePictureStoragePath] = useState(loggedInUser?.profilePictureStoragePath || "");
+    const [fullName, setFullName] = useState(profileData?.fullName || "");
+    const [email, setEmail] = useState(profileData?.email || "");
+    const [gender, setGender] = useState(profileData?.gender || "");
+    const [countryCode, setCountryCode] = useState(profileData?.countryCode || "");
+    const [phoneNumber, setPhoneNumber] = useState(profileData?.phoneNumber || "");
+    const [password, setPassword] = useState(profileData?.password || "");
+    const [passwordConfirmation, setPasswordConfirmation] = useState(profileData?.password || "");
+    const [profilePictureURL, setProfilePictureURL] = useState(profileData?.profilePictureURL || "");
+    // const [profilePictureStoragePath, setProfilePictureStoragePath] = useState(profileData?.profilePictureStoragePath || "");
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -45,15 +62,18 @@ const EditProfile = ({type, loggedInUser}) => {
 
     useEffect(() => {
         // Set nilai state berdasarkan data loggedInUser saat komponen mount atau loggedInUser berubah
-        if (loggedInUser) {
-            setEmail(loggedInUser.email || "");
-            setGender(loggedInUser.gender || "");
-            setCountryCode(loggedInUser.countryCode || "");
-            setPhoneNumber(loggedInUser.phoneNumber || "");
-            setProfilePictureURL(loggedInUser.profilePictureURL || "");
-            setProfilePictureStoragePath(loggedInUser.profilePictureStoragePath || "");
+        if (profileData) {
+            setFullName(profileData.fullName || "");
+            setEmail(profileData.email || "");
+            setGender(profileData.gender || "");
+            setCountryCode(profileData.countryCode || "");
+            setPhoneNumber(profileData.phoneNumber || "");
+            setProfilePictureURL(profileData.profilePictureURL || "");
+            // setProfilePictureStoragePath(profileData.profilePictureStoragePath || "");
         }
-    }, [loggedInUser]);
+    }, [profileData]);
+
+    // console.log("profileData:", profileData);
 
     const handleInputChange = (name, value) => {
         switch (name) {
